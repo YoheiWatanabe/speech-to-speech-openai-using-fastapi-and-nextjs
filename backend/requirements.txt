@@ -1,0 +1,11 @@
+# web framework and server
+fastapi
+uvicorn[standard]
+gunicorn
+httpx
+
+# AI libraries
+openai
+
+# others
+python-dotenv
