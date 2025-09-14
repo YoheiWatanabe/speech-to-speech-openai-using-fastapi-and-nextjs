@@ -211,6 +211,7 @@ export default function Home() {
               msg.sender === 'bot' ? 'bg-gray-200 text-gray-800 self-start rounded-bl-md' :
               'bg-red-100 text-red-700 self-start rounded-bl-md'
             }`}>
+              <span>{msg.text}</span>
             </div>
           ))}
           {isLoading && (
