@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AppConfig, Message } from '@/types/app';
-import { loadConfig, saveConfig } from '@/lib/config';
+import { defaultConfig, loadConfig, saveConfig } from '@/lib/config';
 import { voiceOptions } from '@/types/tts';
 
 // --- main component ---
 export default function Home() {
   // --- State management ---
-  const [config, setConfig] = useState<AppConfig>(loadConfig);
+  const [config, setConfig] = useState<AppConfig>(defaultConfig);
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [isConversationActive, setIsConversationActive] = useState(false);
@@ -21,13 +21,33 @@ export default function Home() {
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const chatBoxRef = useRef<HTMLDivElement>(null);
 
-  // --- userEffect and a helper function ---
+  // --- userEffect ---
   useEffect(() => {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
     }
   }, [messages]);
-  
+
+  useEffect(() => {
+    const selectedModel = config.s2s.model;
+    const selectedVoice = config.s2s.voice;
+    const isGpt4oModel = selectedModel.includes('gpt-4o');
+    const isInvalidVoiceSelected = selectedVoice === 'marin' || selectedVoice === 'cedar';
+
+    if (isGpt4oModel && isInvalidVoiceSelected) {
+      setConfig(prev => {
+        const newConfig = JSON.parse(JSON.stringify(prev));
+        newConfig.s2s.voice = 'alloy';
+        return newConfig;
+      });
+    }
+  }, [config.s2s.model, config.s2s.voice]);
+
+  useEffect(() => {
+    const savedConfig = loadConfig();
+    setConfig(savedConfig);
+  }, []); 
+
   const addMessage = useCallback((text: string, sender: Message['sender'], time?: number, price?: number) => {
     setMessages(prev => [...prev, { id: Date.now(), text, sender, time, price }]);
   }, []);
@@ -197,7 +217,15 @@ export default function Home() {
 
   // --- rendering ---
   const isFormDisabled = isConversationActive;
-  const currentVoiceOptions = voiceOptions.openai_realtime;
+  const getFilteredVoiceOptions = () => {
+    const allVoices = voiceOptions.openai_realtime;
+    if (config.s2s.model.includes('gpt-4o')) {
+      const { marin, cedar, ...filteredVoices } = allVoices;
+      return filteredVoices;
+    }
+    return allVoices;
+  };
+  const currentVoiceOptions = getFilteredVoiceOptions();
 
   return (
     <div className="flex flex-row max-lg:flex-col items-stretch w-full max-w-[1400px] h-[95vh] max-lg:h-screen bg-white rounded-lg max-lg:rounded-none shadow-lg overflow-hidden">

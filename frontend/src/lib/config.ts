@@ -1,7 +1,7 @@
 import { AppConfig } from "../types/app";
 
 // default
-const defaultConfig: AppConfig = {
+export const defaultConfig: AppConfig = {
     prompt: 'You are a helpful assistant.',
     s2s: {
         model: 'gpt-realtime',
